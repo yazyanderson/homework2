@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2048 Game</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+
+        #board {
+            width: 420px;
+            height: 420px;
+            margin: 20px auto;
+            display: grid;
+            grid-template-columns: repeat(4, 100px);
+            grid-template-rows: repeat(4, 100px);
+            gap: 5px;
+        }
+
+        .tile {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: lightgray;
+            font-size: 30px;
+            font-weight: bold;
+        }
+
+        button {
+            padding: 10px 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>2048</h1>
+
+    <p>Score: <span id="score">0</span></p>
+
+    <div id="board"></div>
+
+    <button id="resetButton">New Game</button>
+
+    <script>
+        // Gets the page elements
+        const boardElement = document.getElementById("board");
+        const scoreText = document.getElementById("score");
+        const resetButton = document.getElementById("resetButton");
+
+        // Stores the board
+        let board = [];
+
+        // Stores the score
+        let score = 0;
+
+        // Starts a new game
+        function newGame() {
+            board = [
+                [0, 0, 0, 0],
+                [0, 0, 0, 0],
+                [0, 0, 0, 0],
+                [0, 0, 0, 0]
+            ];
+
+            score = 0;
+
+            addRandomTile();
+            addRandomTile();
+
+            updateBoard();
+        }
+
+        // Adds a random 2 or 4
+        function addRandomTile() {
+            const emptySpaces = [];
+
+            // Finds empty spaces
+            for (let row = 0; row < 4; row++) {
+                for (let column = 0; column < 4; column++) {
+                    if (board[row][column] === 0) {
+                        emptySpaces.push([row, column]);
+                    }
+                }
+            }
+
+            // Stops if the board is full
+            if (emptySpaces.length === 0) {
+                return;
+            }
+
+            // Picks a random empty space
+            const randomIndex = Math.floor(
+                Math.random() * emptySpaces.length
+            );
+
+            const space = emptySpaces[randomIndex];
+
+            const row = space[0];
+            const column = space[1];
+
+            // Adds mostly 2s and sometimes 4s
+            if (Math.random() < 0.9) {
+                board[row][column] = 2;
+            } else {
+                board[row][column] = 4;
+            }
+        }
+
+        // Updates the board on the page
+        function updateBoard() {
+            boardElement.innerHTML = "";
+
+            for (let row = 0; row < 4; row++) {
+                for (let column = 0; column < 4; column++) {
+
+                    const tile = document.createElement("div");
+
+                    tile.classList.add("tile");
+
+                    if (board[row][column] !== 0) {
+                        tile.innerHTML = board[row][column];
+                    }
+
+                    boardElement.appendChild(tile);
+                }
+            }
+
+            scoreText.innerHTML = score;
+        }
+
+        // Slides and combines one row
+        function slideRow(row) {
+
+            // Removes zeros
+            let numbers = row.filter(function(number) {
+                return number !== 0;
+            });
+
+            // Combines matching numbers
+            for (let i = 0; i < numbers.length - 1; i++) {
+                if (numbers[i] === numbers[i + 1]) {
+
+                    numbers[i] = numbers[i] * 2;
+
+                    score += numbers[i];
+
+                    numbers[i + 1] = 0;
+                }
+            }
+
+            // Removes zeros again
+            numbers = numbers.filter(function(number) {
+                return number !== 0;
+            });
+
+            // Adds zeros back
+            while (numbers.length < 4) {
+                numbers.push(0);
+            }
+
+            return numbers;
+        }
+
+        // Moves everything left
+        function moveLeft() {
+            for (let row = 0; row < 4; row++) {
+                board[row] = slideRow(board[row]);
+            }
+        }
+
+        // Moves everything right
+        function moveRight() {
+            for (let row = 0; row < 4; row++) {
+
+                board[row].reverse();
+
+                board[row] = slideRow(board[row]);
+
+                board[row].reverse();
+            }
+        }
+
+        // Moves everything up
+        function moveUp() {
+            for (let column = 0; column < 4; column++) {
+
+                const newColumn = [];
+
+                for (let row = 0; row < 4; row++) {
+                    newColumn.push(board[row][column]);
+                }
+
+                const movedColumn = slideRow(newColumn);
+
+                for (let row = 0; row < 4; row++) {
+                    board[row][column] = movedColumn[row];
+                }
+            }
+        }
+
+        // Moves everything down
+        function moveDown() {
+            for (let column = 0; column < 4; column++) {
+
+                const newColumn = [];
+
+                for (let row = 0; row < 4; row++) {
+                    newColumn.push(board[row][column]);
+                }
+
+                newColumn.reverse();
+
+                const movedColumn = slideRow(newColumn);
+
+                movedColumn.reverse();
+
+                for (let row = 0; row < 4; row++) {
+                    board[row][column] = movedColumn[row];
+                }
+            }
+        }
+
+        // Checks keyboard input
+        document.addEventListener("keydown", function(event) {
+
+            if (event.key === "ArrowLeft") {
+                moveLeft();
+            }
+
+            if (event.key === "ArrowRight") {
+                moveRight();
+            }
+
+            if (event.key === "ArrowUp") {
+                moveUp();
+            }
+
+            if (event.key === "ArrowDown") {
+                moveDown();
+            }
+
+            // Adds a new tile after each move
+            if (
+                event.key === "ArrowLeft" ||
+                event.key === "ArrowRight" ||
+                event.key === "ArrowUp" ||
+                event.key === "ArrowDown"
+            ) {
+                addRandomTile();
+                updateBoard();
+            }
+        });
+
+        // Resets the game
+        resetButton.addEventListener("click", newGame);
+
+        // Starts the first game
+        newGame();
+    </script>
+
+</body>
+</html>

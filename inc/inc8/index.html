@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic Tac Toe</title>
+
+    <style>
+        #board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            gap: 5px;
+        }
+
+        .board-button {
+            width: 100px;
+            height: 100px;
+            font-size: 40px;
+        }
+
+        .x {
+            color: pink;
+        }
+
+        .o {
+            color: greenyellow;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Tic Tac Toe</h1>
+
+    <p id="status">Your turn</p>
+
+    <div id="board">
+        <button class="board-button"></button>
+        <button class="board-button"></button>
+        <button class="board-button"></button>
+
+        <button class="board-button"></button>
+        <button class="board-button"></button>
+        <button class="board-button"></button>
+
+        <button class="board-button"></button>
+        <button class="board-button"></button>
+        <button class="board-button"></button>
+    </div>
+
+    <br>
+
+    <button id="newGameButton">New Game</button>
+
+    <script>
+        // Gets the page elements
+        const buttons = document.querySelectorAll(".board-button");
+        const statusText = document.getElementById("status");
+        const newGameButton = document.getElementById("newGameButton");
+
+        // Keeps track of whose turn it is
+        let playerTurn = true;
+
+        // Stores the game results
+        const gameStatus = {
+            playerWin: "You win!",
+            computerWin: "Computer wins!",
+            draw: "It's a draw!",
+            playing: "Playing"
+        };
+
+        // All possible ways to win
+        const winPatterns = [
+            [0, 1, 2],
+            [3, 4, 5],
+            [6, 7, 8],
+            [0, 3, 6],
+            [1, 4, 7],
+            [2, 5, 8],
+            [0, 4, 8],
+            [2, 4, 6]
+        ];
+
+        // Starts a new game
+        function newGame() {
+            for (let i = 0; i < buttons.length; i++) {
+                buttons[i].innerHTML = "";
+                buttons[i].classList.remove("x", "o");
+                buttons[i].disabled = false;
+            }
+
+            playerTurn = true;
+            statusText.innerHTML = "Your turn";
+        }
+
+        // Runs when a board button is clicked
+        function boardButtonClicked(event) {
+            const button = event.target;
+
+            if (playerTurn === true) {
+                button.innerHTML = "X";
+                button.disabled = true;
+                button.classList.add("x");
+
+                const result = switchTurn();
+
+                if (result === gameStatus.playing) {
+                    setTimeout(makeComputerMove, 1000);
+                }
+            }
+        }
+
+        // Checks the game and changes turns
+        function switchTurn() {
+            const result = checkForWinner();
+
+            if (result !== gameStatus.playing) {
+                statusText.innerHTML = result;
+
+                for (let i = 0; i < buttons.length; i++) {
+                    buttons[i].disabled = true;
+                }
+
+                return result;
+            }
+
+            playerTurn = !playerTurn;
+
+            if (playerTurn === true) {
+                statusText.innerHTML = "Your turn";
+            } else {
+                statusText.innerHTML = "Computer is thinking...";
+            }
+
+            return result;
+        }
+
+        // Makes the computer choose a spot
+        function makeComputerMove() {
+            const emptyButtons = [];
+
+            for (let i = 0; i < buttons.length; i++) {
+                if (buttons[i].innerHTML === "") {
+                    emptyButtons.push(buttons[i]);
+                }
+            }
+
+            if (emptyButtons.length > 0) {
+                const randomNumber = Math.floor(
+                    Math.random() * emptyButtons.length
+                );
+
+                const button = emptyButtons[randomNumber];
+
+                button.innerHTML = "O";
+                button.disabled = true;
+                button.classList.add("o");
+
+                switchTurn();
+            }
+        }
+
+        // Checks for a winner
+        function checkForWinner() {
+            for (let i = 0; i < winPatterns.length; i++) {
+                const pattern = winPatterns[i];
+
+                const first = buttons[pattern[0]].innerHTML;
+                const second = buttons[pattern[1]].innerHTML;
+                const third = buttons[pattern[2]].innerHTML;
+
+                if (
+                    first !== "" &&
+                    first === second &&
+                    second === third
+                ) {
+                    if (first === "X") {
+                        return gameStatus.playerWin;
+                    } else {
+                        return gameStatus.computerWin;
+                    }
+                }
+            }
+
+            // Checks for empty spaces
+            for (let i = 0; i < buttons.length; i++) {
+                if (buttons[i].innerHTML === "") {
+                    return gameStatus.playing;
+                }
+            }
+
+            return gameStatus.draw;
+        }
+
+        // Adds click events to the buttons
+        for (let i = 0; i < buttons.length; i++) {
+            buttons[i].addEventListener("click", boardButtonClicked);
+        }
+
+        // Makes the New Game button work
+        newGameButton.addEventListener("click", newGame);
+    </script>
+
+</body>
+
+</html>
